@@ -43,20 +43,17 @@ $cpf = required_param('cpf', PARAM_INT);   // Plagiarism child file id.
 $childs = unplag_stored_file::get_childs($pf);
 $current = unplag_stored_file::get_unplag_file($cpf);
 
-$modulecontext = context_module::instance($cmid);
-
 echo $OUTPUT->header();
 
 $currenttab = 'unplag_file_id_' . $current->id;
 $tabs = array();
 
 foreach ($childs as $child) {
-
     if ($child->check_id !== null && $child->progress == 100) {
         $url = new \moodle_url('/plagiarism/unplag/reports.php', array(
-                'cmid' => $cmid,
-                'pf' => $pf,
-                'cpf' => $child->id
+            'cmid' => $cmid,
+            'pf'   => $pf,
+            'cpf'  => $child->id,
         ));
 
         $tabs[] = new tabobject('unplag_file_id_' . $child->id, $url->out_as_local_url(), $child->filename, '', false);
@@ -64,17 +61,16 @@ foreach ($childs as $child) {
 };
 print_tabs(array($tabs), $currenttab);
 
-$teacherhere = has_capability('moodle/grade:edit', $modulecontext, $USER->id);
 $reporturl = $current->reporturl;
-if ($teacherhere) {
+if (unplag_core::is_teacher($cmid)) {
     $reporturl = $current->reportediturl;
-    unplag_core::inject_comment_token($reporturl);
 }
+unplag_core::inject_comment_token($reporturl, unplag_core::is_teacher($cmid));
 unplag_language::inject_language_to_url($reporturl);
 
 echo $OUTPUT->box_start('generalbox boxaligncenter', 'intro');
 echo '<iframe src="' . $reporturl .
-        '" frameborder="0" allowfullscreen align="center" id="_unplag_report_frame" style="width: 100%; height: 750px;"></iframe>';
+    '" frameborder="0" allowfullscreen align="center" id="_unplag_report_frame" style="width: 100%; height: 750px;"></iframe>';
 echo $OUTPUT->box_end();
 
 echo $OUTPUT->footer();
